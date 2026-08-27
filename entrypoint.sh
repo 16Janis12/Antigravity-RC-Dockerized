@@ -16,6 +16,30 @@ if [[ -z "$AGY_BIN" || ! -x "$AGY_BIN" ]]; then
     AGY_BIN="${HOME}/.local/bin/agy"
 fi
 
+# Manage toggleable plugins
+manage_plugins() {
+    # 1. Built-in toggle for rmyndharis/antigravity-skills
+    if [[ "${ENABLE_COMMUNITY_SKILLS:-false}" == "true" ]]; then
+        echo "--> Community skills plugin (rmyndharis/antigravity-skills) is ENABLED."
+        "$AGY_BIN" plugin install https://github.com/rmyndharis/antigravity-skills 2>/dev/null || true
+        "$AGY_BIN" plugin enable antigravity-skills 2>/dev/null || true
+    elif [[ "${ENABLE_COMMUNITY_SKILLS:-false}" == "false" ]]; then
+        "$AGY_BIN" plugin disable antigravity-skills 2>/dev/null || true
+    fi
+
+    # 2. Support custom list of plugins via AGY_PLUGINS (comma-separated URLs)
+    if [[ -n "${AGY_PLUGINS:-}" ]]; then
+        IFS=',' read -ra PLUGIN_LIST <<< "$AGY_PLUGINS"
+        for plugin in "${PLUGIN_LIST[@]}"; do
+            plugin_trimmed=$(echo "$plugin" | xargs)
+            if [[ -n "$plugin_trimmed" ]]; then
+                echo "--> Installing custom plugin: $plugin_trimmed"
+                "$AGY_BIN" plugin install "$plugin_trimmed" 2>/dev/null || true
+            fi
+        done
+    fi
+}
+
 PORT="${AGY_HUB_PORT:-4400}"
 NAME_ARGS=()
 if [[ -n "${AGY_INSTANCE_NAME:-}" ]]; then
@@ -33,6 +57,7 @@ case "$1" in
         echo "the sign-in process with your Google account."
         echo "Once authenticated, your session token will be saved to your volume."
         echo "=============================================================="
+        manage_plugins
         exec "$AGY_BIN" --remote-control --hub-port "$PORT" "${NAME_ARGS[@]}"
         ;;
     run)
@@ -43,6 +68,8 @@ case "$1" in
         fi
         echo "  Hub Port      : ${PORT}"
         echo "=============================================================="
+
+        manage_plugins
 
         if [[ ! -s "$TOKEN_FILE" ]]; then
             echo ""

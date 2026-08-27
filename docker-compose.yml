@@ -11,6 +11,8 @@ services:
     environment:
       - AGY_INSTANCE_NAME=${AGY_INSTANCE_NAME:-docker-instance}
       - AGY_HUB_PORT=${AGY_HUB_PORT:-4400}
+      - ENABLE_COMMUNITY_SKILLS=${ENABLE_COMMUNITY_SKILLS:-false}
+      - AGY_PLUGINS=${AGY_PLUGINS:-}
     volumes:
       # Persistent named volume for auth credentials and user settings
       - gemini_config:/home/antigravity/.gemini

@@ -19,6 +19,7 @@ Run the headless [Google Antigravity Remote Control](https://antigravity.google/
 ## 🌟 Features
 
 - ⚡ **Zero-Build Quickstart**: Pre-built multi-arch images (`linux/amd64` and `linux/arm64`) published to GitHub Container Registry (`ghcr.io`).
+- 🧩 **Toggleable Community Plugins**: Easily enable/disable community skills like [`rmyndharis/antigravity-skills`](https://github.com/rmyndharis/antigravity-skills) via `.env`.
 - 🔐 **Persistent Authentication**: Google OAuth tokens and daemon cache persist across restarts via named Docker volumes.
 - 👤 **Non-Root Security**: Runs as an `antigravity` user (UID 1000) with passwordless `sudo` privileges.
 - 📁 **Workspace Integration**: Mount any local project directory into `/workspace` inside the container.
@@ -35,7 +36,7 @@ Run the headless [Google Antigravity Remote Control](https://antigravity.google/
 │       └── ci.yml        # Multi-arch build and GHCR publishing workflow
 ├── Dockerfile            # Container build specification with CLI & toolchains
 ├── docker-compose.yml    # Compose configuration using pre-built GHCR image
-├── entrypoint.sh         # Startup & authentication management script
+├── entrypoint.sh         # Startup, plugin manager & authentication script
 ├── .env.example          # Environment variables template
 ├── .dockerignore         # Docker context exclusions
 ├── .gitignore            # Git ignore rules
@@ -71,6 +72,8 @@ cp .env.example .env
 |---|---|---|
 | `AGY_INSTANCE_NAME` | Name displayed for this machine in the Remote Control dashboard | `docker-instance` |
 | `AGY_HUB_PORT` | Internal hub port used by the daemon | `4400` |
+| `ENABLE_COMMUNITY_SKILLS` | Toggle auto-installing [`rmyndharis/antigravity-skills`](https://github.com/rmyndharis/antigravity-skills) (`true`/`false`) | `false` |
+| `AGY_PLUGINS` | Comma-separated list of additional plugin URLs to install on startup | `""` |
 
 #### 3. One-Time Google Authentication
 Docker Compose automatically pulls the pre-built image from GHCR:
@@ -104,16 +107,48 @@ docker run -it --rm \
   -v antigravity_data:/home/antigravity/.antigravity \
   ghcr.io/16janis12/antigravity-rc-dockerized:latest login
 
-# 2. Start daemon in background
+# 2. Start daemon in background (with community skills enabled)
 docker run -d \
   --name antigravity-remote-daemon \
   --restart unless-stopped \
   -e AGY_INSTANCE_NAME=my-server \
+  -e ENABLE_COMMUNITY_SKILLS=true \
   -v gemini_config:/home/antigravity/.gemini \
   -v antigravity_data:/home/antigravity/.antigravity \
   -v $(pwd)/workspace:/workspace \
   -p 4400:4400 \
   ghcr.io/16janis12/antigravity-rc-dockerized:latest
+```
+
+---
+
+## 🧩 Managing Plugins
+
+### Toggle Community Skills via `.env`
+To enable the curated [`rmyndharis/antigravity-skills`](https://github.com/rmyndharis/antigravity-skills) playbook collection, set:
+```env
+ENABLE_COMMUNITY_SKILLS=true
+```
+Then restart the container:
+```bash
+docker compose restart
+```
+
+### Install Custom Plugins
+To install any other Antigravity plugins or skills repositories, specify their URLs in `AGY_PLUGINS`:
+```env
+AGY_PLUGINS=https://github.com/rmyndharis/antigravity-skills,https://github.com/sickn33/antigravity-awesome-skills
+```
+
+### Interactive Plugin Commands
+You can also manage plugins at runtime directly through the container shell:
+```bash
+# List installed plugins
+docker compose exec antigravity agy plugin list
+
+# Enable or disable a plugin
+docker compose exec antigravity agy plugin enable antigravity-skills
+docker compose exec antigravity agy plugin disable antigravity-skills
 ```
 
 ---
@@ -144,7 +179,7 @@ docker run -d \
 
 | Volume / Path | Destination in Container | Purpose |
 |---|---|---|
-| `gemini_config` | `/home/antigravity/.gemini` | Google OAuth tokens, credentials, and settings |
+| `gemini_config` | `/home/antigravity/.gemini` | Google OAuth tokens, credentials, plugins, and settings |
 | `antigravity_data` | `/home/antigravity/.antigravity` | Daemon runtime logs and cache |
 | `./workspace` | `/workspace` | Project files accessible by your agent |
 
