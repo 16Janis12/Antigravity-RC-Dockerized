@@ -1,0 +1,13 @@
+# Local environment files
+.env
+
+# Logs
+*.log
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Workspace files (keep .gitkeep to track directory)
+workspace/*
+!workspace/.gitkeep

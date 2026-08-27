@@ -1,0 +1,59 @@
+#!/bin/bash
+set -e
+
+AGY_BIN="${HOME}/.local/bin/agy"
+[[ -x "$AGY_BIN" ]] || AGY_BIN=$(command -v agy || true)
+
+if [[ -z "$AGY_BIN" || ! -x "$AGY_BIN" ]]; then
+    echo "[ERROR] 'agy' binary not found in PATH or ~/.local/bin."
+    echo "Attempting to install 'agy'..."
+    curl -fsSL https://antigravity.google/cli/install.sh | bash
+    AGY_BIN="${HOME}/.local/bin/agy"
+fi
+
+PORT="${AGY_HUB_PORT:-4400}"
+NAME_ARGS=()
+if [[ -n "${AGY_INSTANCE_NAME:-}" ]]; then
+    NAME_ARGS=("--remote-control-name" "${AGY_INSTANCE_NAME}")
+fi
+
+TOKEN_FILE="${HOME}/.gemini/jetski-standalone-oauth-token"
+
+case "$1" in
+    login)
+        echo "=============================================================="
+        echo "  Antigravity Remote Control Initial Authentication"
+        echo "=============================================================="
+        echo "Please open the URL displayed below in your browser and complete"
+        echo "the sign-in process with your Google account."
+        echo "Once authenticated, your session token will be saved to your volume."
+        echo "=============================================================="
+        exec "$AGY_BIN" --remote-control --hub-port "$PORT" "${NAME_ARGS[@]}"
+        ;;
+    run)
+        echo "=============================================================="
+        echo "  Starting Antigravity Remote Control Headless Daemon"
+        if [[ -n "${AGY_INSTANCE_NAME:-}" ]]; then
+            echo "  Instance Name : ${AGY_INSTANCE_NAME}"
+        fi
+        echo "  Hub Port      : ${PORT}"
+        echo "=============================================================="
+
+        if [[ ! -s "$TOKEN_FILE" ]]; then
+            echo ""
+            echo "[WARNING] No authentication token found at:"
+            echo "  $TOKEN_FILE"
+            echo ""
+            echo "First-time sign-in required! You can either:"
+            echo "  1. Authenticate interactively now via terminal URL/code prompt below, OR"
+            echo "  2. Run the dedicated login command:"
+            echo "       docker compose run --rm antigravity login"
+            echo "--------------------------------------------------------------"
+        fi
+
+        exec "$AGY_BIN" --remote-control --hub-port "$PORT" "${NAME_ARGS[@]}"
+        ;;
+    *)
+        exec "$@"
+        ;;
+esac

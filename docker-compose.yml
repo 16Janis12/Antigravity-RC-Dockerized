@@ -1,0 +1,28 @@
+services:
+  antigravity:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: antigravity-remote-daemon:latest
+    container_name: antigravity-remote-daemon
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    environment:
+      - AGY_INSTANCE_NAME=${AGY_INSTANCE_NAME:-docker-instance}
+      - AGY_HUB_PORT=${AGY_HUB_PORT:-4400}
+    volumes:
+      # Persistent named volume for auth credentials and user settings
+      - gemini_config:/home/antigravity/.gemini
+      # Persistent named volume for logs and runtime data
+      - antigravity_data:/home/antigravity/.antigravity
+      # Mount local projects directory into container workspace
+      - ./workspace:/workspace
+    ports:
+      - "4400:4400"
+
+volumes:
+  gemini_config:
+    driver: local
+  antigravity_data:
+    driver: local
