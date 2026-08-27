@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Ensure permissions on mounted volumes for the antigravity user
+sudo mkdir -p "${HOME}/.gemini/antigravity-cli" "${HOME}/.antigravity" /workspace 2>/dev/null || true
+sudo chown -R "$(id -u):$(id -g)" "${HOME}/.gemini" "${HOME}/.antigravity" /workspace 2>/dev/null || true
+sudo chmod -R u+rwX "${HOME}/.gemini" "${HOME}/.antigravity" /workspace 2>/dev/null || true
+
 AGY_BIN="${HOME}/.local/bin/agy"
 [[ -x "$AGY_BIN" ]] || AGY_BIN=$(command -v agy || true)
 

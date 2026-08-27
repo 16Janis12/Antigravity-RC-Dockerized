@@ -37,6 +37,9 @@ USER ${USERNAME}
 ENV HOME=/home/${USERNAME}
 WORKDIR ${HOME}
 
+# Pre-create config and runtime directories with correct ownership
+RUN mkdir -p ${HOME}/.gemini/antigravity-cli ${HOME}/.antigravity /workspace
+
 # Install Antigravity CLI (agy)
 RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
 
