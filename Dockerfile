@@ -32,13 +32,16 @@ RUN groupadd --gid ${USER_GID} ${USERNAME} \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
 
-# Set up working environment for the non-root user
+# Create workspace directory with correct ownership as root
+RUN mkdir -p /workspace && chown -R ${USERNAME}:${USERNAME} /workspace
+
+# Switch to non-root user
 USER ${USERNAME}
 ENV HOME=/home/${USERNAME}
 WORKDIR ${HOME}
 
-# Pre-create config and runtime directories with correct ownership
-RUN mkdir -p ${HOME}/.gemini/antigravity-cli ${HOME}/.antigravity /workspace
+# Pre-create config and runtime directories in home directory
+RUN mkdir -p ${HOME}/.gemini/antigravity-cli ${HOME}/.antigravity
 
 # Install Antigravity CLI (agy)
 RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
