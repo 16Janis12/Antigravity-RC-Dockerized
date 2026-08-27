@@ -1,10 +1,17 @@
 # Antigravity Remote Control (Dockerized)
 
+[![Docker CI](https://github.com/16Janis12/Antigravity-RC-Dockerized/actions/workflows/ci.yml/badge.svg)](https://github.com/16Janis12/Antigravity-RC-Dockerized/actions/workflows/ci.yml)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![Google Antigravity](https://img.shields.io/badge/Google_Antigravity-Remote_Control-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://antigravity.google/docs/remote-control/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 Run the headless [Google Antigravity Remote Control](https://antigravity.google/docs/remote-control/) daemon (`agy --remote-control`) inside an isolated, persistent, containerized Docker environment.
+
+---
+
+> [!NOTE]
+> ### ⚠️ Disclaimer
+> This is an independent, community-driven open-source project and is **not affiliated with, endorsed by, sponsored by, or associated with Google LLC, Alphabet Inc., or any of their subsidiaries**.
+> "Google", "Google Antigravity", "Antigravity", and all related logos and brand marks are trademarks of Google LLC.
 
 ---
 
@@ -17,6 +24,7 @@ This repository provides a production-ready Docker container and Docker Compose 
 - Persists Google OAuth credentials and configuration across container restarts and rebuilds.
 - Mounts a local workspace folder directly into the container.
 - Includes an interactive login flow for first-time Google authentication.
+- Includes a GitHub Actions CI workflow to automatically test and build the image.
 
 ---
 
@@ -24,12 +32,16 @@ This repository provides a production-ready Docker container and Docker Compose 
 
 ```text
 .
+├── .github/
+│   └── workflows/
+│       └── ci.yml        # Automated Docker build & validation workflow
 ├── Dockerfile            # Container build specification with CLI & toolchains
 ├── docker-compose.yml    # Multi-volume Compose configuration
 ├── entrypoint.sh         # Startup & authentication management script
 ├── .env.example          # Environment variables template
 ├── .dockerignore         # Docker context exclusions
 ├── .gitignore            # Git ignore rules
+├── LICENSE               # MIT License
 └── workspace/            # Directory mounted into /workspace in the container
 ```
 
@@ -120,6 +132,8 @@ This setup preserves your session data using named Docker volumes:
 
 ---
 
-## 📄 License
+## 📄 License & Legal Notice
 
-Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+Distributed under the [MIT License](LICENSE).
+
+This repository and its maintainers are not affiliated with, endorsed by, sponsored by, or associated with Google LLC or Alphabet Inc.
