@@ -1,10 +1,11 @@
 # Antigravity Remote Control (Dockerized)
 
-[![Docker CI](https://github.com/16Janis12/Antigravity-RC-Dockerized/actions/workflows/ci.yml/badge.svg)](https://github.com/16Janis12/Antigravity-RC-Dockerized/actions/workflows/ci.yml)
-[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Docker CI & Publish](https://github.com/16Janis12/Antigravity-RC-Dockerized/actions/workflows/ci.yml/badge.svg)](https://github.com/16Janis12/Antigravity-RC-Dockerized/actions/workflows/ci.yml)
+[![GHCR Image](https://img.shields.io/badge/GHCR-ghcr.io%2F16janis12%2Fantigravity--rc--dockerized-blue?logo=github)](https://github.com/16Janis12/Antigravity-RC-Dockerized/pkgs/container/antigravity-rc-dockerized)
+[![Platform Support](https://img.shields.io/badge/Platform-linux%2Famd64%20%7C%20linux%2Farm64-informational?logo=linux)](https://github.com/16Janis12/Antigravity-RC-Dockerized)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-Run the headless [Google Antigravity Remote Control](https://antigravity.google/docs/remote-control/) daemon (`agy --remote-control`) inside an isolated, persistent, containerized Docker environment.
+Run the headless [Google Antigravity Remote Control](https://antigravity.google/docs/remote-control/) daemon (`agy --remote-control`) inside an isolated, persistent, containerized Docker environment with pre-built multi-architecture images.
 
 ---
 
@@ -15,16 +16,13 @@ Run the headless [Google Antigravity Remote Control](https://antigravity.google/
 
 ---
 
-## 🌟 Overview
+## 🌟 Features
 
-The **Antigravity Remote Control** headless daemon lets you host AI agent sessions on any server, homelab, or cloud VM while managing and steering them remotely from any web browser or mobile device via [antigravity.google](https://antigravity.google).
-
-This repository provides a production-ready Docker container and Docker Compose configuration that:
-- Runs the Antigravity CLI (`agy`) as a non-root user with `sudo` capabilities.
-- Persists Google OAuth credentials and configuration across container restarts and rebuilds.
-- Mounts a local workspace folder directly into the container.
-- Includes an interactive login flow for first-time Google authentication.
-- Includes a GitHub Actions CI workflow to automatically test and build the image.
+- ⚡ **Zero-Build Quickstart**: Pre-built multi-arch images (`linux/amd64` and `linux/arm64`) published to GitHub Container Registry (`ghcr.io`).
+- 🔐 **Persistent Authentication**: Google OAuth tokens and daemon cache persist across restarts via named Docker volumes.
+- 👤 **Non-Root Security**: Runs as an `antigravity` user (UID 1000) with passwordless `sudo` privileges.
+- 📁 **Workspace Integration**: Mount any local project directory into `/workspace` inside the container.
+- 🔄 **Automated CI/CD**: Automatically builds, verifies, and publishes container images on every release.
 
 ---
 
@@ -34,9 +32,9 @@ This repository provides a production-ready Docker container and Docker Compose 
 .
 ├── .github/
 │   └── workflows/
-│       └── ci.yml        # Automated Docker build & validation workflow
+│       └── ci.yml        # Multi-arch build and GHCR publishing workflow
 ├── Dockerfile            # Container build specification with CLI & toolchains
-├── docker-compose.yml    # Multi-volume Compose configuration
+├── docker-compose.yml    # Compose configuration using pre-built GHCR image
 ├── entrypoint.sh         # Startup & authentication management script
 ├── .env.example          # Environment variables template
 ├── .dockerignore         # Docker context exclusions
@@ -47,21 +45,24 @@ This repository provides a production-ready Docker container and Docker Compose 
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (No Build Required)
 
 ### Prerequisites
 - [Docker Engine](https://docs.docker.com/engine/install/) (20.10+)
 - [Docker Compose](https://docs.docker.com/compose/install/) (v2+)
 - A Google Account with access to [Google Antigravity](https://antigravity.google)
 
-### 1. Clone the Repository
+---
+
+### Method 1: Using Docker Compose (Recommended)
+
+#### 1. Clone the repository
 ```bash
 git clone git@github.com:16Janis12/Antigravity-RC-Dockerized.git
 cd Antigravity-RC-Dockerized
 ```
 
-### 2. Configure Environment (Optional)
-Copy `.env.example` to `.env` and set your preferred instance name:
+#### 2. Configure Environment (Optional)
 ```bash
 cp .env.example .env
 ```
@@ -71,64 +72,89 @@ cp .env.example .env
 | `AGY_INSTANCE_NAME` | Name displayed for this machine in the Remote Control dashboard | `docker-instance` |
 | `AGY_HUB_PORT` | Internal hub port used by the daemon | `4400` |
 
-### 3. Build the Image
-```bash
-docker compose build
-```
-
-### 4. Authenticate (One-Time Setup)
-Antigravity requires an initial Google Account login to link the daemon to your account:
+#### 3. One-Time Google Authentication
+Docker Compose automatically pulls the pre-built image from GHCR:
 ```bash
 docker compose run --rm antigravity login
 ```
-1. Click or copy the URL printed in the terminal.
-2. Sign in with your Google account in your browser and authorize the application.
-3. Your authentication tokens are saved in the persistent Docker volume (`gemini_config`).
+- Open the printed URL in your browser.
+- Sign in with your Google account to authorize the headless daemon.
+- Session tokens are saved to the persistent `gemini_config` volume.
 
-### 5. Launch the Daemon in the Background
+#### 4. Launch in Background
 ```bash
 docker compose up -d
 ```
 
-### 6. Verify Logs & Connection
+#### 5. Verify Daemon Status
 ```bash
 docker compose logs -f
 ```
 
-Open **[https://antigravity.google](https://antigravity.google)** in any browser — your container will appear in your device list ready to receive tasks!
+---
+
+### Method 2: Standalone `docker run`
+
+You can also run the pre-built image directly with Docker CLI:
+
+```bash
+# 1. First-time login
+docker run -it --rm \
+  -v gemini_config:/home/antigravity/.gemini \
+  -v antigravity_data:/home/antigravity/.antigravity \
+  ghcr.io/16janis12/antigravity-rc-dockerized:latest login
+
+# 2. Start daemon in background
+docker run -d \
+  --name antigravity-remote-daemon \
+  --restart unless-stopped \
+  -e AGY_INSTANCE_NAME=my-server \
+  -v gemini_config:/home/antigravity/.gemini \
+  -v antigravity_data:/home/antigravity/.antigravity \
+  -v $(pwd)/workspace:/workspace \
+  -p 4400:4400 \
+  ghcr.io/16janis12/antigravity-rc-dockerized:latest
+```
 
 ---
 
-## 🛠️ Management Commands
+## 🌐 Connecting from Browser
+
+1. Open the **[Antigravity Remote Control Dashboard](https://antigravity.google)** in your browser.
+2. Sign in with the same Google Account.
+3. Your container will appear under your device list with the name configured in `AGY_INSTANCE_NAME`.
+
+---
+
+## 🛠️ Useful Commands
 
 | Action | Command |
 |---|---|
 | **View logs** | `docker compose logs -f` |
 | **Stop daemon** | `docker compose down` |
 | **Restart daemon** | `docker compose restart` |
-| **Open shell in container** | `docker compose exec antigravity /bin/bash` |
+| **Open container shell** | `docker compose exec antigravity /bin/bash` |
+| **Pull latest image** | `docker compose pull` |
 | **Re-authenticate** | `docker compose run --rm antigravity login` |
-| **Update Antigravity CLI** | `docker compose build --no-cache && docker compose up -d` |
+| **Build locally (optional)** | `docker compose build` |
 
 ---
 
 ## 💾 Data Persistence
 
-This setup preserves your session data using named Docker volumes:
-
 | Volume / Path | Destination in Container | Purpose |
 |---|---|---|
 | `gemini_config` | `/home/antigravity/.gemini` | Google OAuth tokens, credentials, and settings |
 | `antigravity_data` | `/home/antigravity/.antigravity` | Daemon runtime logs and cache |
-| `./workspace` | `/workspace` | Project files and code accessible by the agent |
+| `./workspace` | `/workspace` | Project files accessible by your agent |
 
 ---
 
-## 🔒 Security & Best Practices
+## 🔒 Security
 
-- **Non-root Execution**: The daemon runs as the `antigravity` user (UID 1000) with passwordless `sudo` access inside the container.
-- **Isolated Workspace**: Projects placed inside the `./workspace` directory are mounted cleanly into the container without exposing the rest of your host filesystem.
-- **Credential Storage**: Credentials stay isolated within the `gemini_config` Docker volume and are never baked into image layers.
+- **Non-Root Execution**: Runs as user `antigravity` (UID 1000).
+- **No Hardcoded Secrets**: Credentials are stored in Docker named volumes and are never baked into image layers.
+- **Isolated Workspace**: Only files inside `./workspace` are mounted into the container.
 
 ---
 

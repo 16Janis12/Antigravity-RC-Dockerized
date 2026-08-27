@@ -1,9 +1,9 @@
 services:
   antigravity:
+    image: ghcr.io/16janis12/antigravity-rc-dockerized:latest
     build:
       context: .
       dockerfile: Dockerfile
-    image: antigravity-remote-daemon:latest
     container_name: antigravity-remote-daemon
     restart: unless-stopped
     stdin_open: true
